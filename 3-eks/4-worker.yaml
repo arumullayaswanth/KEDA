@@ -1,0 +1,38 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: worker
+  namespace: keda-demo-04
+  labels:
+    app: worker
+spec:
+  replicas: 0
+  selector:
+    matchLabels:
+      app: worker
+  template:
+    metadata:
+      labels:
+        app: worker
+    spec:
+      containers:
+        - name: worker
+          image: <ACCOUNT_ID>.dkr.ecr.us-east-1.amazonaws.com/keda-demos/worker-sqs:1.0
+          env:
+            - name: WORKER_MODE
+              value: "sqs"
+            - name: SQS_QUEUE_URL
+              value: "<SQS_QUEUE_URL>"
+            - name: AWS_REGION
+              value: "us-east-1"
+            - name: PROCESS_SECONDS
+              value: "20"
+          # Sized so the small t3.small node group hosts only a handful of Pods.
+          # Scaling past that capacity forces Pending Pods -> node autoscaling.
+          resources:
+            requests:
+              cpu: 300m
+              memory: 256Mi
+            limits:
+              cpu: 500m
+              memory: 512Mi

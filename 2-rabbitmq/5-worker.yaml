@@ -1,0 +1,39 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: worker
+  namespace: keda-demo-02
+  labels:
+    app: worker
+spec:
+  replicas: 0 # scale-to-zero; KEDA activates on queue backlog
+  selector:
+    matchLabels:
+      app: worker
+  template:
+    metadata:
+      labels:
+        app: worker
+    spec:
+      containers:
+        - name: worker
+          image: <ACCOUNT_ID>.dkr.ecr.us-east-1.amazonaws.com/keda-demos/worker-rabbitmq:1.0
+          env:
+            - name: WORKER_MODE
+              value: "rabbitmq"
+            - name: QUEUE_NAME
+              value: "tasks"
+            - name: PROCESS_SECONDS
+              value: "5"
+            - name: AMQP_URL
+              valueFrom:
+                secretKeyRef:
+                  name: rabbitmq-conn
+                  key: host
+          resources:
+            requests:
+              cpu: 50m
+              memory: 64Mi
+            limits:
+              cpu: 150m
+              memory: 128Mi

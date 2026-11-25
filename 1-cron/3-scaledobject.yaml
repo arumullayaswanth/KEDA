@@ -1,0 +1,19 @@
+apiVersion: keda.sh/v1alpha1
+kind: ScaledObject
+metadata:
+  name: worker-cron
+  namespace: keda-demo-cron
+spec:
+  scaleTargetRef:
+    name: worker
+  minReplicaCount: 1 # outside the cron window
+  maxReplicaCount: 10 # ceiling; desiredReplicas is the in-window target
+  pollingInterval: 15 # how often KEDA checks the trigger (seconds)
+  cooldownPeriod: 30
+  triggers:
+    - type: cron
+      metadata:
+        timezone: "Asia/Kolkata"
+        start: "0 11 * * *" # 11:00 AM IST
+        end: "0 23 * * *" # 11:00 PM IST
+        desiredReplicas: "4" # inside the window

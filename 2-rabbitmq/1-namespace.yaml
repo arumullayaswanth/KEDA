@@ -1,0 +1,7 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: keda-demo-02
+  labels:
+    app.kubernetes.io/part-of: keda-autoscaling-demos
+    keda-demo: "02-rabbitmq"

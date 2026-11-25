@@ -1,0 +1,21 @@
+apiVersion: keda.sh/v1alpha1
+kind: ScaledObject
+metadata:
+  name: worker-rabbitmq
+  namespace: keda-demo-02
+spec:
+  scaleTargetRef:
+    name: worker
+  minReplicaCount: 0 # scale-to-zero demonstrates event-driven activation
+  maxReplicaCount: 20
+  pollingInterval: 5 # check queue every 5s so scaling is visibly fast
+  cooldownPeriod: 30
+  triggers:
+    - type: rabbitmq
+      metadata:
+        protocol: amqp
+        queueName: tasks
+        mode: QueueLength
+        value: "10" # target 10 messages per replica
+      authenticationRef:
+        name: keda-rabbitmq-auth

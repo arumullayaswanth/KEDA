@@ -1,0 +1,7 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: keda-demo-cron
+  labels:
+    app.kubernetes.io/part-of: keda-autoscaling-demos
+    keda-demo: "1-cron"

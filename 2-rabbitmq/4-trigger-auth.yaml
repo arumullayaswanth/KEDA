@@ -1,0 +1,12 @@
+# Binds the RabbitMQ connection Secret to the ScaledObject's trigger so the
+# ScaledObject does not embed credentials directly.
+apiVersion: keda.sh/v1alpha1
+kind: TriggerAuthentication
+metadata:
+  name: keda-rabbitmq-auth
+  namespace: keda-demo-02
+spec:
+  secretTargetRef:
+    - parameter: host
+      name: rabbitmq-conn
+      key: host

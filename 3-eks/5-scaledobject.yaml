@@ -1,0 +1,18 @@
+apiVersion: keda.sh/v1alpha1
+kind: ScaledObject
+metadata:
+  name: worker-sqs
+  namespace: keda-demo-04
+spec:
+  scaleTargetRef:
+    name: worker
+  minReplicaCount: 0
+  maxReplicaCount: 50 # high enough to exhaust the small node group
+  pollingInterval: 10
+  triggers:
+    - type: aws-sqs-queue
+      metadata:
+        queueURL: "<SQS_QUEUE_URL>"
+        queueLength: "5" # target 5 messages per replica
+        awsRegion: "us-east-1"
+        identityOwner: operator # authenticate via the KEDA operator's IRSA role
