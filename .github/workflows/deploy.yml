@@ -1,9 +1,11 @@
 name: Deploy KEDA Infra (EKS)
 
-# One-click provisioning of the EKS infra for the KEDA demos via Terraform:
+# Manual-only provisioning of the EKS infra for the KEDA demos via Terraform:
 # VPC, EKS cluster + node group, Karpenter, KEDA, SQS, and IRSA.
-# It does NOT deploy the demo workloads — connect your client with the output
+# It does NOT deploy the demo workloads. Connect your client with the output
 # `connect_command` and `kubectl apply` the demo manifests yourself.
+#
+# Run it from: GitHub > Actions > "Deploy KEDA Infra (EKS)" > Run workflow.
 #
 # Required GitHub repository variables (Settings > Variables > Actions):
 #   AWS_ROLE_ARN     - IAM role for GitHub OIDC (created manually)
@@ -11,11 +13,6 @@ name: Deploy KEDA Infra (EKS)
 #   TF_STATE_BUCKET  - S3 bucket for Terraform state (created manually)
 
 on:
-  push:
-    branches: [main]
-    paths:
-      - "keda-autoscaling-demos/terraform/**"
-      - ".github/workflows/deploy.yml"
   workflow_dispatch:
     inputs:
       action:
@@ -32,11 +29,13 @@ env:
   AWS_REGION: ${{ vars.AWS_REGION }}
   TF_STATE_BUCKET: ${{ vars.TF_STATE_BUCKET }}
   TF_STATE_KEY: keda-demos/terraform.tfstate
-  TF_WORKING_DIR: keda-autoscaling-demos/terraform
+  TF_WORKING_DIR: terraform
 
 jobs:
   terraform:
-    name: Terraform ${{ github.event.inputs.action || 'apply' }}
+    name: Terraform ${{ inputs.action }}
+    # Only run from the main branch.
+    if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -70,21 +69,21 @@ jobs:
         run: terraform validate
 
       - name: Terraform Plan
-        if: ${{ github.event.inputs.action != 'destroy' }}
+        if: ${{ inputs.action == 'apply' }}
         working-directory: ${{ env.TF_WORKING_DIR }}
         run: terraform plan -input=false -var="region=${AWS_REGION}"
 
       - name: Terraform Apply
-        if: ${{ github.event_name == 'push' || github.event.inputs.action == 'apply' }}
+        if: ${{ inputs.action == 'apply' }}
         working-directory: ${{ env.TF_WORKING_DIR }}
         run: terraform apply -auto-approve -input=false -var="region=${AWS_REGION}"
 
       - name: Terraform Destroy
-        if: ${{ github.event.inputs.action == 'destroy' }}
+        if: ${{ inputs.action == 'destroy' }}
         working-directory: ${{ env.TF_WORKING_DIR }}
         run: terraform destroy -auto-approve -input=false -var="region=${AWS_REGION}"
 
       - name: Show outputs
-        if: ${{ github.event.inputs.action != 'destroy' }}
+        if: ${{ inputs.action == 'apply' }}
         working-directory: ${{ env.TF_WORKING_DIR }}
         run: terraform output
